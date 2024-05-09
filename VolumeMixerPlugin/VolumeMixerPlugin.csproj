@@ -1,0 +1,26 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Library</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <UseWindowsForms>true</UseWindowsForms>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Reference Include="Macro Deck 2">
+      <HintPath>bin\Debug\net8.0-windows\Macro Deck 2.dll</HintPath>
+    </Reference>
+    <Reference Include="NAudio">
+      <HintPath>..\..\..\..\..\..\..\..\.nuget\packages\naudio\2.2.1\lib\netcoreapp3.1\NAudio.dll</HintPath>
+    </Reference>
+    <Reference Include="NAudio.Core">
+      <HintPath>..\..\..\..\..\..\..\..\.nuget\packages\naudio.core\2.2.1\lib\netstandard2.0\NAudio.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="NAudio.Wasapi">
+      <HintPath>..\..\..\..\..\..\..\..\.nuget\packages\naudio.wasapi\2.2.1\lib\netstandard2.0\NAudio.Wasapi.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+</Project>
