@@ -1,0 +1,10 @@
+{
+  "type": "Plugin",
+  "name": "Volume Mixer Plugin",
+  "author": "Diego",
+  "repository": "",
+  "packageId": "VolumeMixerPlugin",
+  "version": "1.0.0",
+  "target-plugin-api-version": 50,
+  "dll": "VolumeMixerPlugin.dll"
+}

@@ -361,3 +361,13 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+
+## Local Macro Deck reference (not distributed)
+Macro Deck 2.dll
+
+## Rider
+.idea/
+
+## OS files
+.DS_Store
+Thumbs.db
