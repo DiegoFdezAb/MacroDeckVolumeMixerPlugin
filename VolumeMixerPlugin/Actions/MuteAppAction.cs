@@ -3,6 +3,7 @@ using SuchByte.MacroDeck.ActionButton;
 using SuchByte.MacroDeck.GUI;
 using SuchByte.MacroDeck.GUI.CustomControls;
 using SuchByte.MacroDeck.Plugins;
+using VolumeMixerPlugin.Services;
 using MacroDeckRoundedComboBox = SuchByte.MacroDeck.GUI.CustomControls.RoundedComboBox;
 
 namespace VolumeMixerPlugin.Actions;
@@ -61,12 +62,28 @@ public class MuteAppConfigControl : ActionConfigControl
         var refreshButton = new Button { Location = new Point(330, 12), Width = 30, Height = 26, Text = "↻" };
         refreshButton.Click += (sender, e) => PopulateApps();
 
+        var importIconButton = new ButtonPrimary { Text = "Import Icon", Location = new Point(370, 12), Width = 100, Height = 26 };
+        importIconButton.Click += (sender, e) => OnImportIconClick();
+
         Controls.Add(label);
         Controls.Add(_appComboBox);
         Controls.Add(refreshButton);
+        Controls.Add(importIconButton);
 
         PopulateApps();
         LoadConfig();
+    }
+
+    private void OnImportIconClick()
+    {
+        var selectedApp = _appComboBox.SelectedItem?.ToString();
+        if (string.IsNullOrEmpty(selectedApp))
+        {
+            using var msgBox = new SuchByte.MacroDeck.GUI.CustomControls.MessageBox();
+            msgBox.ShowDialog("Import Icon", "Please select an application first.", System.Windows.Forms.MessageBoxButtons.OK);
+            return;
+        }
+        IconImportService.PromptAndImportIcon(selectedApp);
     }
 
     private void PopulateApps()
