@@ -66,7 +66,7 @@ public class SetAppVolumeConfigControl : ActionConfigControl
         var label2 = new Label { Text = "Volume (0-100):", Location = new Point(14, 54), AutoSize = true };
         _volumeNumeric = new NumericUpDown
         {
-            Location = new Point(120, 50),
+            Location = new Point(180, 50),
             Minimum = 0,
             Maximum = 100,
             Value = 50,
