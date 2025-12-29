@@ -13,6 +13,8 @@ public class MuteAppAction : PluginAction
     public override string Description => "Toggle mute state for an application";
     public override bool CanConfigure => true;
 
+    internal string? _trackedAppName;
+
     public override void Trigger(string clientId, ActionButton actionButton)
     {
         var config = GetConfig();
@@ -20,6 +22,20 @@ public class MuteAppAction : PluginAction
 
         VolumeMixerPluginMain.Instance?.AudioService?.ToggleAppMute(config.AppName);
         VolumeMixerPluginMain.Instance?.UpdateVariables();
+    }
+
+    public override void OnActionButtonLoaded()
+    {
+        var config = GetConfig();
+        var appName = string.IsNullOrWhiteSpace(config?.AppName) ? null : config!.AppName;
+        _trackedAppName = appName;
+        VolumeMixerPluginMain.TrackAppUsage(appName);
+    }
+
+    public override void OnActionButtonDelete()
+    {
+        VolumeMixerPluginMain.UntrackAppUsage(_trackedAppName);
+        _trackedAppName = null;
     }
 
     public override ActionConfigControl GetActionConfigControl(ActionConfigurator actionConfigurator)
@@ -99,9 +115,29 @@ public class MuteAppConfigControl : ActionConfigControl
 
     public override bool OnActionSave()
     {
+        string? previousAppName = null;
+        if (!string.IsNullOrEmpty(_action.Configuration))
+        {
+            try
+            {
+                previousAppName = JsonConvert.DeserializeObject<MuteAppConfig>(_action.Configuration)?.AppName;
+            }
+            catch
+            {
+            }
+        }
+
         var config = new MuteAppConfig { AppName = _appComboBox.SelectedItem?.ToString() ?? "" };
         _action.Configuration = JsonConvert.SerializeObject(config);
         _action.ConfigurationSummary = $"Toggle {config.AppName}";
+
+        var action = _action as MuteAppAction;
+        if (action != null)
+        {
+            action._trackedAppName = string.IsNullOrWhiteSpace(config.AppName) ? null : config.AppName;
+        }
+        VolumeMixerPluginMain.TrackAppUsage(config.AppName, previousAppName);
+
         return true;
     }
 }

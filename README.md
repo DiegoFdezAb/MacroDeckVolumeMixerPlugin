@@ -103,8 +103,8 @@ Copy the following files to `%appdata%\Macro Deck\plugins\VolumeMixerPlugin\`:
 | `volumemixer_comm_device` | String | Name of the current default communications output device |
 | `volumemixer_default_mic` | String | Name of the current default multimedia input device |
 | `volumemixer_comm_mic` | String | Name of the current default communications input device |
-| `volumemixer_app_<name>_volume` | Integer | Volume level (0-100) for a specific app |
-| `volumemixer_app_<name>_muted` | Bool | Mute state for a specific app |
+| `volumemixer_app_<name>_volume` | Integer | Volume level (0-100) for a tracked app (only apps used in configured actions) |
+| `volumemixer_app_<name>_muted` | Bool | Mute state for a tracked app (only apps used in configured actions) |
 
 ### Actions
 

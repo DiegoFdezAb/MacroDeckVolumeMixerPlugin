@@ -13,6 +13,8 @@ public class VolumeUpAction : PluginAction
     public override string Description => "Increase app volume by 5%";
     public override bool CanConfigure => true;
 
+    internal string? _trackedAppName;
+
     public override void Trigger(string clientId, ActionButton actionButton)
     {
         var config = GetConfig();
@@ -20,6 +22,20 @@ public class VolumeUpAction : PluginAction
 
         VolumeMixerPluginMain.Instance?.AudioService?.AdjustAppVolume(config.AppName, 5);
         VolumeMixerPluginMain.Instance?.UpdateVariables();
+    }
+
+    public override void OnActionButtonLoaded()
+    {
+        var config = GetConfig();
+        var appName = string.IsNullOrWhiteSpace(config?.AppName) ? null : config!.AppName;
+        _trackedAppName = appName;
+        VolumeMixerPluginMain.TrackAppUsage(appName);
+    }
+
+    public override void OnActionButtonDelete()
+    {
+        VolumeMixerPluginMain.UntrackAppUsage(_trackedAppName);
+        _trackedAppName = null;
     }
 
     public override ActionConfigControl GetActionConfigControl(ActionConfigurator actionConfigurator)
@@ -47,6 +63,8 @@ public class VolumeDownAction : PluginAction
     public override string Description => "Decrease app volume by 5%";
     public override bool CanConfigure => true;
 
+    internal string? _trackedAppName;
+
     public override void Trigger(string clientId, ActionButton actionButton)
     {
         var config = GetConfig();
@@ -54,6 +72,20 @@ public class VolumeDownAction : PluginAction
 
         VolumeMixerPluginMain.Instance?.AudioService?.AdjustAppVolume(config.AppName, -5);
         VolumeMixerPluginMain.Instance?.UpdateVariables();
+    }
+
+    public override void OnActionButtonLoaded()
+    {
+        var config = GetConfig();
+        var appName = string.IsNullOrWhiteSpace(config?.AppName) ? null : config!.AppName;
+        _trackedAppName = appName;
+        VolumeMixerPluginMain.TrackAppUsage(appName);
+    }
+
+    public override void OnActionButtonDelete()
+    {
+        VolumeMixerPluginMain.UntrackAppUsage(_trackedAppName);
+        _trackedAppName = null;
     }
 
     public override ActionConfigControl GetActionConfigControl(ActionConfigurator actionConfigurator)
@@ -133,9 +165,32 @@ public class VolumeStepConfigControl : ActionConfigControl
 
     public override bool OnActionSave()
     {
+        string? previousAppName = null;
+        if (!string.IsNullOrEmpty(_action.Configuration))
+        {
+            try
+            {
+                previousAppName = JsonConvert.DeserializeObject<VolumeStepConfig>(_action.Configuration)?.AppName;
+            }
+            catch
+            {
+            }
+        }
+
         var config = new VolumeStepConfig { AppName = _appComboBox.SelectedItem?.ToString() ?? "" };
         _action.Configuration = JsonConvert.SerializeObject(config);
         _action.ConfigurationSummary = config.AppName;
+
+        if (_action is VolumeUpAction up)
+        {
+            up._trackedAppName = string.IsNullOrWhiteSpace(config.AppName) ? null : config.AppName;
+        }
+        else if (_action is VolumeDownAction down)
+        {
+            down._trackedAppName = string.IsNullOrWhiteSpace(config.AppName) ? null : config.AppName;
+        }
+
+        VolumeMixerPluginMain.TrackAppUsage(config.AppName, previousAppName);
         return true;
     }
 }
