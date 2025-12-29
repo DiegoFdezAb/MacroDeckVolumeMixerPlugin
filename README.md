@@ -8,15 +8,17 @@ A **Macro Deck 2** plugin that provides Windows audio control directly from your
 
 ### Current
 - **Default Audio Device Info**: See which playback device is currently set as default (Multimedia & Communications roles)
+- **Default Microphone Info**: See which input device is currently set as default
 - **Per-Application Volume Control**: View and adjust volume for individual apps (Spotify, Discord, games, etc.)
 - **Mute/Unmute Apps**: Toggle mute state for specific applications
-- **Switch Default Device**: Change the default playback device with a button press
-- **Device Enumeration**: List all active audio output devices
+- **Switch Default Output**: Change the default playback device with a button press
+- **Switch Default Microphone**: Change the default input device with a button press
+- **Switch Output + Microphone**: Change both output and input devices together (audio profile switching)
+- **Device Switching**: Switch output and/or microphone devices via actions
 
 ### Planned
 - **Volume Sliders**: Expose volume levels as Macro Deck variables for dynamic button labels
 - **Audio Session Monitoring**: Real-time updates when apps start/stop playing audio
-- **Input Device Support**: Microphone selection and monitoring
 
 ---
 
@@ -97,10 +99,10 @@ Copy the following files to `%appdata%\Macro Deck\plugins\VolumeMixerPlugin\`:
 
 | Variable Name | Type | Description |
 |---------------|------|-------------|
-| `volumemixer_default_device` | String | Name of the current default multimedia device |
-| `volumemixer_default_device_id` | String | Device ID (for internal use) |
-| `volumemixer_comm_device` | String | Name of the current default communications device |
-| `volumemixer_devices` | String | List of all active audio output devices |
+| `volumemixer_default_device` | String | Name of the current default multimedia output device |
+| `volumemixer_comm_device` | String | Name of the current default communications output device |
+| `volumemixer_default_mic` | String | Name of the current default multimedia input device |
+| `volumemixer_comm_mic` | String | Name of the current default communications input device |
 | `volumemixer_app_<name>_volume` | Integer | Volume level (0-100) for a specific app |
 | `volumemixer_app_<name>_muted` | Bool | Mute state for a specific app |
 
@@ -111,7 +113,9 @@ Copy the following files to `%appdata%\Macro Deck\plugins\VolumeMixerPlugin\`:
 | **Set App Volume** | Set volume for a specific application | App name, Volume (0-100) |
 | **Volume Up/Down** | Increment/decrement app volume by 5% | App name |
 | **Mute App** | Toggle mute state for a specific application | App name |
-| **Set Default Device** | Change the default playback device | Device name or ID |
+| **Set Default Output** | Change the default playback device | Device name or ID |
+| **Set Default Microphone** | Change the default input device | Device name or ID |
+| **Set Default Output + Microphone** | Change both output and input devices at once | Output device, Input device |
 | **Refresh Devices** | Force refresh of audio device list | — |
 
 ### Example Button Configurations
@@ -143,7 +147,6 @@ The plugin implements proper COM object disposal to prevent memory leaks:
 
 ### Limitations
 - **Windows only** — Core Audio API is not available on Linux/macOS
-- **Render devices only** (playback) — Input device support is planned
 - **No audio routing** — Cannot route audio between devices like Voicemeeter
 - **Process-based detection** — Apps are identified by process name, not window title
 

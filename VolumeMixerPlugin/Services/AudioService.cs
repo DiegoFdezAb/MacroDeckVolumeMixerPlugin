@@ -179,6 +179,107 @@ public sealed class AudioService : IDisposable
         }
     }
 
+    // ───────────────────────────────────────────────────────────────
+    // Capture (Microphone) support
+    // ───────────────────────────────────────────────────────────────
+
+    public (string Name, string Id)? GetDefaultCaptureDeviceInfo()
+    {
+        try
+        {
+            using var device = _deviceEnumerator.GetDefaultAudioEndpoint(DataFlow.Capture, Role.Multimedia);
+            return (device.FriendlyName, device.ID);
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    public (string Name, string Id)? GetDefaultCaptureCommDeviceInfo()
+    {
+        try
+        {
+            using var device = _deviceEnumerator.GetDefaultAudioEndpoint(DataFlow.Capture, Role.Communications);
+            return (device.FriendlyName, device.ID);
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    public IReadOnlyList<(string Name, string Id)> GetActiveCaptureDevices()
+    {
+        var result = new List<(string, string)>();
+        try
+        {
+            var devices = _deviceEnumerator.EnumerateAudioEndPoints(DataFlow.Capture, DeviceState.Active);
+            foreach (var device in devices)
+            {
+                try
+                {
+                    result.Add((device.FriendlyName, device.ID));
+                }
+                finally
+                {
+                    device.Dispose();
+                }
+            }
+        }
+        catch
+        {
+        }
+        return result;
+    }
+
+    public IReadOnlyList<string> GetActiveCaptureDeviceNames()
+    {
+        var result = new List<string>();
+        try
+        {
+            var devices = _deviceEnumerator.EnumerateAudioEndPoints(DataFlow.Capture, DeviceState.Active);
+            foreach (var device in devices)
+            {
+                try
+                {
+                    result.Add(device.FriendlyName);
+                }
+                finally
+                {
+                    device.Dispose();
+                }
+            }
+        }
+        catch
+        {
+        }
+        return result;
+    }
+
+    public bool SetDefaultCaptureDevice(string deviceId, bool allRoles = true)
+    {
+        if (string.IsNullOrEmpty(deviceId)) return false;
+        try
+        {
+            if (allRoles)
+            {
+                _policyConfig.SetDefaultEndpoint(deviceId, ERole.Console);
+                _policyConfig.SetDefaultEndpoint(deviceId, ERole.Multimedia);
+                _policyConfig.SetDefaultEndpoint(deviceId, ERole.Communications);
+            }
+            else
+            {
+                _policyConfig.SetDefaultEndpoint(deviceId, ERole.Multimedia);
+            }
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
     public IReadOnlyList<(string ProcessName, int Volume, bool Muted)> SnapshotDefaultDeviceSessions()
     {
         var result = new List<(string, int, bool)>();

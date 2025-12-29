@@ -36,6 +36,8 @@ public class VolumeMixerPluginMain : MacroDeckPlugin
             new VolumeDownAction(),
             new MuteAppAction(),
             new SetDefaultDeviceAction(),
+            new SetDefaultMicrophoneAction(),
+            new SetDefaultDevicesPairAction(),
             new RefreshDevicesAction()
         };
 
@@ -83,13 +85,24 @@ public class VolumeMixerPluginMain : MacroDeckPlugin
             if (defaultDeviceInfo.HasValue)
             {
                 VariableManager.SetValue("volumemixer_default_device", defaultDeviceInfo.Value.Name, VariableType.String, this, Array.Empty<string>());
-                VariableManager.SetValue("volumemixer_default_device_id", defaultDeviceInfo.Value.Id, VariableType.String, this, Array.Empty<string>());
             }
 
             var commDeviceInfo = AudioService.GetDefaultCommunicationsDeviceInfo();
             if (commDeviceInfo.HasValue)
             {
                 VariableManager.SetValue("volumemixer_comm_device", commDeviceInfo.Value.Name, VariableType.String, this, Array.Empty<string>());
+            }
+
+            var defaultMicInfo = AudioService.GetDefaultCaptureDeviceInfo();
+            if (defaultMicInfo.HasValue)
+            {
+                VariableManager.SetValue("volumemixer_default_mic", defaultMicInfo.Value.Name, VariableType.String, this, Array.Empty<string>());
+            }
+
+            var commMicInfo = AudioService.GetDefaultCaptureCommDeviceInfo();
+            if (commMicInfo.HasValue)
+            {
+                VariableManager.SetValue("volumemixer_comm_mic", commMicInfo.Value.Name, VariableType.String, this, Array.Empty<string>());
             }
 
             var sessions = AudioService.SnapshotDefaultDeviceSessions();
@@ -99,9 +112,6 @@ public class VolumeMixerPluginMain : MacroDeckPlugin
                 VariableManager.SetValue($"volumemixer_app_{safeName}_volume", volume, VariableType.Integer, this, Array.Empty<string>());
                 VariableManager.SetValue($"volumemixer_app_{safeName}_muted", muted, VariableType.Bool, this, Array.Empty<string>());
             }
-
-            var deviceNames = AudioService.GetActivePlaybackDeviceNames();
-            VariableManager.SetValue("volumemixer_devices", string.Join(", ", deviceNames), VariableType.String, this, Array.Empty<string>());
         }
         catch (Exception ex)
         {

@@ -7,10 +7,10 @@ using MacroDeckRoundedComboBox = SuchByte.MacroDeck.GUI.CustomControls.RoundedCo
 
 namespace VolumeMixerPlugin.Actions;
 
-public class SetDefaultDeviceAction : PluginAction
+public class SetDefaultMicrophoneAction : PluginAction
 {
-    public override string Name => "Set Default Output";
-    public override string Description => "Change the default audio output (playback) device";
+    public override string Name => "Set Default Microphone";
+    public override string Description => "Change the default audio input (microphone) device";
     public override bool CanConfigure => true;
 
     public override void Trigger(string clientId, ActionButton actionButton)
@@ -18,21 +18,21 @@ public class SetDefaultDeviceAction : PluginAction
         var config = GetConfig();
         if (config == null || string.IsNullOrEmpty(config.DeviceId)) return;
 
-        VolumeMixerPluginMain.Instance?.AudioService?.SetDefaultDevice(config.DeviceId, config.AllRoles);
+        VolumeMixerPluginMain.Instance?.AudioService?.SetDefaultCaptureDevice(config.DeviceId, config.AllRoles);
         VolumeMixerPluginMain.Instance?.UpdateVariables();
     }
 
     public override ActionConfigControl GetActionConfigControl(ActionConfigurator actionConfigurator)
     {
-        return new SetDefaultDeviceConfigControl(this, actionConfigurator);
+        return new SetDefaultMicrophoneConfigControl(this, actionConfigurator);
     }
 
-    private SetDefaultDeviceConfig? GetConfig()
+    private SetDefaultMicrophoneConfig? GetConfig()
     {
         if (string.IsNullOrEmpty(Configuration)) return null;
         try
         {
-            return JsonConvert.DeserializeObject<SetDefaultDeviceConfig>(Configuration);
+            return JsonConvert.DeserializeObject<SetDefaultMicrophoneConfig>(Configuration);
         }
         catch
         {
@@ -41,28 +41,28 @@ public class SetDefaultDeviceAction : PluginAction
     }
 }
 
-public class SetDefaultDeviceConfig
+public class SetDefaultMicrophoneConfig
 {
     public string DeviceId { get; set; } = "";
     public string DeviceName { get; set; } = "";
     public bool AllRoles { get; set; } = true;
 }
 
-public class SetDefaultDeviceConfigControl : ActionConfigControl
+public class SetDefaultMicrophoneConfigControl : ActionConfigControl
 {
     private readonly MacroDeckRoundedComboBox _deviceComboBox;
     private readonly CheckBox _allRolesCheckBox;
     private readonly Button _refreshButton;
-    private readonly SetDefaultDeviceAction _action;
+    private readonly SetDefaultMicrophoneAction _action;
     private List<(string Name, string Id)> _devices = new();
 
-    public SetDefaultDeviceConfigControl(SetDefaultDeviceAction action, ActionConfigurator actionConfigurator)
+    public SetDefaultMicrophoneConfigControl(SetDefaultMicrophoneAction action, ActionConfigurator actionConfigurator)
     {
         _action = action;
 
         var label = new Label
         {
-            Text = "Device:",
+            Text = "Microphone:",
             Location = new Point(14, 18),
             AutoSize = true
         };
@@ -102,7 +102,7 @@ public class SetDefaultDeviceConfigControl : ActionConfigControl
 
     private void PopulateDevices()
     {
-        _devices = VolumeMixerPluginMain.Instance?.AudioService?.GetActivePlaybackDevices().ToList()
+        _devices = VolumeMixerPluginMain.Instance?.AudioService?.GetActiveCaptureDevices().ToList()
                    ?? new List<(string, string)>();
 
         var selectedId = _deviceComboBox.SelectedItem is DeviceItem sel ? sel.Id : null;
@@ -131,7 +131,7 @@ public class SetDefaultDeviceConfigControl : ActionConfigControl
         if (string.IsNullOrEmpty(_action.Configuration)) return;
         try
         {
-            var config = JsonConvert.DeserializeObject<SetDefaultDeviceConfig>(_action.Configuration);
+            var config = JsonConvert.DeserializeObject<SetDefaultMicrophoneConfig>(_action.Configuration);
             if (config != null)
             {
                 _allRolesCheckBox.Checked = config.AllRoles;
@@ -153,7 +153,7 @@ public class SetDefaultDeviceConfigControl : ActionConfigControl
     public override bool OnActionSave()
     {
         var selectedDevice = _deviceComboBox.SelectedItem as DeviceItem;
-        var config = new SetDefaultDeviceConfig
+        var config = new SetDefaultMicrophoneConfig
         {
             DeviceId = selectedDevice?.Id ?? "",
             DeviceName = selectedDevice?.Name ?? "",
