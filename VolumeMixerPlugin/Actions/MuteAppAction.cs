@@ -13,6 +13,8 @@ public class MuteAppAction : PluginAction
     public override string Description => "Toggle mute state for an application";
     public override bool CanConfigure => true;
 
+    internal string? _trackedAppName;
+
     public override void Trigger(string clientId, ActionButton actionButton)
     {
         var config = GetConfig();
@@ -20,6 +22,20 @@ public class MuteAppAction : PluginAction
 
         VolumeMixerPluginMain.Instance?.AudioService?.ToggleAppMute(config.AppName);
         VolumeMixerPluginMain.Instance?.UpdateVariables();
+    }
+
+    public override void OnActionButtonLoaded()
+    {
+        var config = GetConfig();
+        var appName = string.IsNullOrWhiteSpace(config?.AppName) ? null : config!.AppName;
+        VolumeMixerPluginMain.TrackAppUsage(appName, _trackedAppName);
+        _trackedAppName = appName;
+    }
+
+    public override void OnActionButtonDelete()
+    {
+        VolumeMixerPluginMain.UntrackAppUsage(_trackedAppName);
+        _trackedAppName = null;
     }
 
     public override ActionConfigControl GetActionConfigControl(ActionConfigurator actionConfigurator)
@@ -102,6 +118,15 @@ public class MuteAppConfigControl : ActionConfigControl
         var config = new MuteAppConfig { AppName = _appComboBox.SelectedItem?.ToString() ?? "" };
         _action.Configuration = JsonConvert.SerializeObject(config);
         _action.ConfigurationSummary = $"Toggle {config.AppName}";
+
+        var newAppName = string.IsNullOrWhiteSpace(config.AppName) ? null : config.AppName;
+        if (_action is MuteAppAction action)
+        {
+            VolumeMixerPluginMain.TrackAppUsage(newAppName, action._trackedAppName);
+            action._trackedAppName = newAppName;
+        }
+
         return true;
     }
+
 }

@@ -12,6 +12,9 @@ public class VolumeMixerPluginMain : MacroDeckPlugin
     public static VolumeMixerPluginMain? Instance { get; private set; }
     public AudioService? AudioService { get; private set; }
 
+    private static readonly object _trackedAppsLock = new();
+    private static readonly Dictionary<string, int> _trackedAppsRefCount = new(StringComparer.OrdinalIgnoreCase);
+
     private System.Timers.Timer? _refreshTimer;
     private int _updateRunning;
     private SynchronizationContext? _syncContext;
@@ -105,12 +108,19 @@ public class VolumeMixerPluginMain : MacroDeckPlugin
                 VariableManager.SetValue("volumemixer_comm_mic", commMicInfo.Value.Name, VariableType.String, this, Array.Empty<string>());
             }
 
+            var trackedApps = GetTrackedAppsSnapshot();
+            if (trackedApps.Count == 0) return;
+
             var sessions = AudioService.SnapshotDefaultDeviceSessions();
-            foreach (var (processName, volume, muted) in sessions)
+            var sessionsByProcessName = sessions.ToDictionary(x => x.ProcessName, x => (x.Volume, x.Muted), StringComparer.OrdinalIgnoreCase);
+
+            foreach (var appName in trackedApps)
             {
-                var safeName = SanitizeVariableName(processName);
-                VariableManager.SetValue($"volumemixer_app_{safeName}_volume", volume, VariableType.Integer, this, Array.Empty<string>());
-                VariableManager.SetValue($"volumemixer_app_{safeName}_muted", muted, VariableType.Bool, this, Array.Empty<string>());
+                if (!sessionsByProcessName.TryGetValue(appName, out var sessionInfo)) continue;
+
+                var safeName = SanitizeVariableName(appName);
+                VariableManager.SetValue($"volumemixer_app_{safeName}_volume", sessionInfo.Volume, VariableType.Integer, this, Array.Empty<string>());
+                VariableManager.SetValue($"volumemixer_app_{safeName}_muted", sessionInfo.Muted, VariableType.Bool, this, Array.Empty<string>());
             }
         }
         catch (Exception ex)
@@ -123,7 +133,7 @@ public class VolumeMixerPluginMain : MacroDeckPlugin
         }
     }
 
-    private static string SanitizeVariableName(string name)
+    internal static string SanitizeVariableName(string name)
     {
         var lower = name.ToLowerInvariant();
         var cleaned = Regex.Replace(lower, @"[^a-z0-9_]+", "_");
@@ -131,6 +141,95 @@ public class VolumeMixerPluginMain : MacroDeckPlugin
         if (cleaned.Length == 0) cleaned = "unknown";
         if (!char.IsLetter(cleaned[0])) cleaned = "app_" + cleaned;
         return cleaned;
+    }
+
+    internal static void TrackAppUsage(string? appName, string? previousAppName = null)
+    {
+        if (Instance == null) return;
+
+        var newAppName = string.IsNullOrWhiteSpace(appName) ? null : appName;
+        var prevAppName = string.IsNullOrWhiteSpace(previousAppName) ? null : previousAppName;
+
+        if (prevAppName != null && newAppName != null && string.Equals(prevAppName, newAppName, StringComparison.OrdinalIgnoreCase))
+        {
+            return;
+        }
+
+        if (prevAppName != null)
+        {
+            UntrackAppInternal(prevAppName);
+        }
+
+        if (newAppName == null) return;
+        TrackAppInternal(newAppName);
+    }
+
+    internal static void UntrackAppUsage(string? appName)
+    {
+        if (Instance == null) return;
+        if (string.IsNullOrWhiteSpace(appName)) return;
+
+        UntrackAppInternal(appName);
+    }
+
+    private static void TrackAppInternal(string appName)
+    {
+        lock (_trackedAppsLock)
+        {
+            if (_trackedAppsRefCount.TryGetValue(appName, out var count))
+            {
+                _trackedAppsRefCount[appName] = count + 1;
+                return;
+            }
+
+            _trackedAppsRefCount[appName] = 1;
+        }
+    }
+
+    private static void UntrackAppInternal(string appName)
+    {
+        var shouldDelete = false;
+        lock (_trackedAppsLock)
+        {
+            if (!_trackedAppsRefCount.TryGetValue(appName, out var count)) return;
+
+            count--;
+            if (count <= 0)
+            {
+                _trackedAppsRefCount.Remove(appName);
+                shouldDelete = true;
+            }
+            else
+            {
+                _trackedAppsRefCount[appName] = count;
+            }
+        }
+
+        if (!shouldDelete) return;
+
+        try
+        {
+            var safeName = SanitizeVariableName(appName);
+            VariableManager.DeleteVariable($"volumemixer_app_{safeName}_volume");
+            VariableManager.DeleteVariable($"volumemixer_app_{safeName}_muted");
+        }
+        catch (Exception ex)
+        {
+            var safeName = SanitizeVariableName(appName);
+            var pluginInstance = Instance;
+            if (pluginInstance != null)
+            {
+                MacroDeckLogger.Warning(pluginInstance, $"Failed to delete app variables for '{appName}' (safe='{safeName}'): {ex.Message}");
+            }
+        }
+    }
+
+    private static IReadOnlyList<string> GetTrackedAppsSnapshot()
+    {
+        lock (_trackedAppsLock)
+        {
+            return _trackedAppsRefCount.Keys.OrderBy(x => x).ToList();
+        }
     }
 
 }

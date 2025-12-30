@@ -13,6 +13,8 @@ public class SetAppVolumeAction : PluginAction
     public override string Description => "Set volume for a specific application";
     public override bool CanConfigure => true;
 
+    internal string? _trackedAppName;
+
     public override void Trigger(string clientId, ActionButton actionButton)
     {
         var config = GetConfig();
@@ -20,6 +22,20 @@ public class SetAppVolumeAction : PluginAction
 
         VolumeMixerPluginMain.Instance?.AudioService?.SetAppVolume(config.AppName, config.Volume);
         VolumeMixerPluginMain.Instance?.UpdateVariables();
+    }
+
+    public override void OnActionButtonLoaded()
+    {
+        var config = GetConfig();
+        var appName = string.IsNullOrWhiteSpace(config?.AppName) ? null : config!.AppName;
+        VolumeMixerPluginMain.TrackAppUsage(appName, _trackedAppName);
+        _trackedAppName = appName;
+    }
+
+    public override void OnActionButtonDelete()
+    {
+        VolumeMixerPluginMain.UntrackAppUsage(_trackedAppName);
+        _trackedAppName = null;
     }
 
     public override ActionConfigControl GetActionConfigControl(ActionConfigurator actionConfigurator)
@@ -124,6 +140,15 @@ public class SetAppVolumeConfigControl : ActionConfigControl
         };
         _action.Configuration = JsonConvert.SerializeObject(config);
         _action.ConfigurationSummary = $"{config.AppName} -> {config.Volume}%";
+
+        var newAppName = string.IsNullOrWhiteSpace(config.AppName) ? null : config.AppName;
+        if (_action is SetAppVolumeAction action)
+        {
+            VolumeMixerPluginMain.TrackAppUsage(newAppName, action._trackedAppName);
+            action._trackedAppName = newAppName;
+        }
+
         return true;
     }
+
 }
