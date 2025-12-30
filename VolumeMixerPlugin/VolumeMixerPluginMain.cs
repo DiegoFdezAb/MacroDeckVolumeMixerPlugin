@@ -147,13 +147,21 @@ public class VolumeMixerPluginMain : MacroDeckPlugin
     {
         if (Instance == null) return;
 
-        if (!string.IsNullOrWhiteSpace(previousAppName) && !string.Equals(previousAppName, appName, StringComparison.OrdinalIgnoreCase))
+        var newAppName = string.IsNullOrWhiteSpace(appName) ? null : appName;
+        var prevAppName = string.IsNullOrWhiteSpace(previousAppName) ? null : previousAppName;
+
+        if (prevAppName != null && newAppName != null && string.Equals(prevAppName, newAppName, StringComparison.OrdinalIgnoreCase))
         {
-            UntrackAppInternal(previousAppName);
+            return;
         }
 
-        if (string.IsNullOrWhiteSpace(appName)) return;
-        TrackAppInternal(appName);
+        if (prevAppName != null)
+        {
+            UntrackAppInternal(prevAppName);
+        }
+
+        if (newAppName == null) return;
+        TrackAppInternal(newAppName);
     }
 
     internal static void UntrackAppUsage(string? appName)
@@ -205,8 +213,14 @@ public class VolumeMixerPluginMain : MacroDeckPlugin
             VariableManager.DeleteVariable($"volumemixer_app_{safeName}_volume");
             VariableManager.DeleteVariable($"volumemixer_app_{safeName}_muted");
         }
-        catch
+        catch (Exception ex)
         {
+            var safeName = SanitizeVariableName(appName);
+            var pluginInstance = Instance;
+            if (pluginInstance != null)
+            {
+                MacroDeckLogger.Warning(pluginInstance, $"Failed to delete app variables for '{appName}' (safe='{safeName}'): {ex.Message}");
+            }
         }
     }
 

@@ -28,8 +28,8 @@ public class VolumeUpAction : PluginAction
     {
         var config = GetConfig();
         var appName = string.IsNullOrWhiteSpace(config?.AppName) ? null : config!.AppName;
+        VolumeMixerPluginMain.TrackAppUsage(appName, _trackedAppName);
         _trackedAppName = appName;
-        VolumeMixerPluginMain.TrackAppUsage(appName);
     }
 
     public override void OnActionButtonDelete()
@@ -78,8 +78,8 @@ public class VolumeDownAction : PluginAction
     {
         var config = GetConfig();
         var appName = string.IsNullOrWhiteSpace(config?.AppName) ? null : config!.AppName;
+        VolumeMixerPluginMain.TrackAppUsage(appName, _trackedAppName);
         _trackedAppName = appName;
-        VolumeMixerPluginMain.TrackAppUsage(appName);
     }
 
     public override void OnActionButtonDelete()
@@ -165,32 +165,23 @@ public class VolumeStepConfigControl : ActionConfigControl
 
     public override bool OnActionSave()
     {
-        string? previousAppName = null;
-        if (!string.IsNullOrEmpty(_action.Configuration))
-        {
-            try
-            {
-                previousAppName = JsonConvert.DeserializeObject<VolumeStepConfig>(_action.Configuration)?.AppName;
-            }
-            catch
-            {
-            }
-        }
-
         var config = new VolumeStepConfig { AppName = _appComboBox.SelectedItem?.ToString() ?? "" };
         _action.Configuration = JsonConvert.SerializeObject(config);
         _action.ConfigurationSummary = config.AppName;
 
+        var newAppName = string.IsNullOrWhiteSpace(config.AppName) ? null : config.AppName;
         if (_action is VolumeUpAction up)
         {
-            up._trackedAppName = string.IsNullOrWhiteSpace(config.AppName) ? null : config.AppName;
+            VolumeMixerPluginMain.TrackAppUsage(newAppName, up._trackedAppName);
+            up._trackedAppName = newAppName;
         }
         else if (_action is VolumeDownAction down)
         {
-            down._trackedAppName = string.IsNullOrWhiteSpace(config.AppName) ? null : config.AppName;
+            VolumeMixerPluginMain.TrackAppUsage(newAppName, down._trackedAppName);
+            down._trackedAppName = newAppName;
         }
 
-        VolumeMixerPluginMain.TrackAppUsage(config.AppName, previousAppName);
         return true;
     }
+
 }

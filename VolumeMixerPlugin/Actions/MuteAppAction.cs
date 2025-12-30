@@ -28,8 +28,8 @@ public class MuteAppAction : PluginAction
     {
         var config = GetConfig();
         var appName = string.IsNullOrWhiteSpace(config?.AppName) ? null : config!.AppName;
+        VolumeMixerPluginMain.TrackAppUsage(appName, _trackedAppName);
         _trackedAppName = appName;
-        VolumeMixerPluginMain.TrackAppUsage(appName);
     }
 
     public override void OnActionButtonDelete()
@@ -115,29 +115,18 @@ public class MuteAppConfigControl : ActionConfigControl
 
     public override bool OnActionSave()
     {
-        string? previousAppName = null;
-        if (!string.IsNullOrEmpty(_action.Configuration))
-        {
-            try
-            {
-                previousAppName = JsonConvert.DeserializeObject<MuteAppConfig>(_action.Configuration)?.AppName;
-            }
-            catch
-            {
-            }
-        }
-
         var config = new MuteAppConfig { AppName = _appComboBox.SelectedItem?.ToString() ?? "" };
         _action.Configuration = JsonConvert.SerializeObject(config);
         _action.ConfigurationSummary = $"Toggle {config.AppName}";
 
-        var action = _action as MuteAppAction;
-        if (action != null)
+        var newAppName = string.IsNullOrWhiteSpace(config.AppName) ? null : config.AppName;
+        if (_action is MuteAppAction action)
         {
-            action._trackedAppName = string.IsNullOrWhiteSpace(config.AppName) ? null : config.AppName;
+            VolumeMixerPluginMain.TrackAppUsage(newAppName, action._trackedAppName);
+            action._trackedAppName = newAppName;
         }
-        VolumeMixerPluginMain.TrackAppUsage(config.AppName, previousAppName);
 
         return true;
     }
+
 }

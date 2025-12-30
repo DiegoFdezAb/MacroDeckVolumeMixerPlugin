@@ -28,8 +28,8 @@ public class SetAppVolumeAction : PluginAction
     {
         var config = GetConfig();
         var appName = string.IsNullOrWhiteSpace(config?.AppName) ? null : config!.AppName;
+        VolumeMixerPluginMain.TrackAppUsage(appName, _trackedAppName);
         _trackedAppName = appName;
-        VolumeMixerPluginMain.TrackAppUsage(appName);
     }
 
     public override void OnActionButtonDelete()
@@ -133,18 +133,6 @@ public class SetAppVolumeConfigControl : ActionConfigControl
 
     public override bool OnActionSave()
     {
-        string? previousAppName = null;
-        if (!string.IsNullOrEmpty(_action.Configuration))
-        {
-            try
-            {
-                previousAppName = JsonConvert.DeserializeObject<SetAppVolumeConfig>(_action.Configuration)?.AppName;
-            }
-            catch
-            {
-            }
-        }
-
         var config = new SetAppVolumeConfig
         {
             AppName = _appComboBox.SelectedItem?.ToString() ?? "",
@@ -153,13 +141,14 @@ public class SetAppVolumeConfigControl : ActionConfigControl
         _action.Configuration = JsonConvert.SerializeObject(config);
         _action.ConfigurationSummary = $"{config.AppName} -> {config.Volume}%";
 
-        var action = _action as SetAppVolumeAction;
-        if (action != null)
+        var newAppName = string.IsNullOrWhiteSpace(config.AppName) ? null : config.AppName;
+        if (_action is SetAppVolumeAction action)
         {
-            action._trackedAppName = string.IsNullOrWhiteSpace(config.AppName) ? null : config.AppName;
+            VolumeMixerPluginMain.TrackAppUsage(newAppName, action._trackedAppName);
+            action._trackedAppName = newAppName;
         }
-        VolumeMixerPluginMain.TrackAppUsage(config.AppName, previousAppName);
 
         return true;
     }
+
 }
