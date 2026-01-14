@@ -15,6 +15,7 @@ A **Macro Deck 2** plugin that provides Windows audio control directly from your
 - **Switch Default Microphone**: Change the default input device with a button press
 - **Switch Output + Microphone**: Change both output and input devices together (audio profile switching)
 - **Device Switching**: Switch output and/or microphone devices via actions
+- **Toggle Mode**: Toggle between 2 devices with a single button press (output, microphone, or both)
 
 ### Planned
 - **Volume Sliders**: Expose volume levels as Macro Deck variables for dynamic button labels
@@ -113,10 +114,26 @@ Copy the following files to `%appdata%\Macro Deck\plugins\VolumeMixerPlugin\`:
 | **Set App Volume** | Set volume for a specific application | App name, Volume (0-100) |
 | **Volume Up/Down** | Increment/decrement app volume by 5% | App name |
 | **Mute App** | Toggle mute state for a specific application | App name |
-| **Set Default Output** | Change the default playback device | Device name or ID |
-| **Set Default Microphone** | Change the default input device | Device name or ID |
-| **Set Default Output + Microphone** | Change both output and input devices at once | Output device, Input device |
+| **Set Default Output** | Change the default playback device | Device name or ID. Toggle mode: select 2 devices to switch between them |
+| **Set Default Microphone** | Change the default input device | Device name or ID. Toggle mode: select 2 microphones to switch between them |
+| **Set Default Output + Microphone** | Change both output and input devices at once | Output device, Input device. Each can optionally use toggle mode |
 | **Refresh Devices** | Force refresh of audio device list | — |
+
+### Toggle Mode
+
+All device switching actions support a **Toggle Mode** that lets you switch between 2 devices with a single button press:
+
+1. Enable the "Toggle" checkbox in the action configuration
+2. Select Device 1 and Device 2 from the dropdown lists
+3. Each button press will switch to the other device
+4. The plugin automatically detects the current device and switches to the alternate one
+
+Toggle mode is available for:
+- **Set Default Output**: Toggle between 2 playback devices
+- **Set Default Microphone**: Toggle between 2 input devices  
+- **Set Default Output + Microphone**: Toggle output and/or microphone independently
+
+**Note:** The two devices must be different. If a device becomes unavailable (disconnected), the toggle will not execute and a warning will be logged.
 
 ### Example Button Configurations
 
