@@ -74,15 +74,15 @@ public class SetAppVolumeConfigControl : ActionConfigControl
         _action = action;
 
         var label1 = new Label { Text = "App Name:", Location = new Point(14, 18), AutoSize = true };
-        _appComboBox = new MacroDeckRoundedComboBox { Location = new Point(120, 14), Width = 200, DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList };
+        _appComboBox = new MacroDeckRoundedComboBox { Location = new Point(150, 14), Width = 200, DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList };
 
-        var refreshButton = new Button { Location = new Point(330, 12), Width = 30, Height = 26, Text = "↻" };
+        var refreshButton = new Button { Location = new Point(360, 12), Width = 30, Height = 26, Text = "↻" };
         refreshButton.Click += (sender, e) => PopulateApps();
 
         var label2 = new Label { Text = "Volume (0-100):", Location = new Point(14, 54), AutoSize = true };
         _volumeNumeric = new NumericUpDown
         {
-            Location = new Point(180, 50),
+            Location = new Point(150, 50),
             Minimum = 0,
             Maximum = 100,
             Value = 50,

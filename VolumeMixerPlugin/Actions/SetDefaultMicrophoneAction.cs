@@ -2,6 +2,7 @@ using Newtonsoft.Json;
 using SuchByte.MacroDeck.ActionButton;
 using SuchByte.MacroDeck.GUI;
 using SuchByte.MacroDeck.GUI.CustomControls;
+using SuchByte.MacroDeck.Logging;
 using SuchByte.MacroDeck.Plugins;
 using MacroDeckRoundedComboBox = SuchByte.MacroDeck.GUI.CustomControls.RoundedComboBox;
 
@@ -16,9 +17,50 @@ public class SetDefaultMicrophoneAction : PluginAction
     public override void Trigger(string clientId, ActionButton actionButton)
     {
         var config = GetConfig();
-        if (config == null || string.IsNullOrEmpty(config.DeviceId)) return;
+        if (config == null) return;
 
-        VolumeMixerPluginMain.Instance?.AudioService?.SetDefaultCaptureDevice(config.DeviceId, config.AllRoles);
+        var audioService = VolumeMixerPluginMain.Instance?.AudioService;
+        if (audioService == null) return;
+
+        if (!config.ToggleMode)
+        {
+            if (string.IsNullOrEmpty(config.DeviceId)) return;
+
+            var availableDevices = audioService.GetActiveCaptureDevices();
+            if (!availableDevices.Any(d => d.Id == config.DeviceId))
+            {
+                MacroDeckLogger.Warning(VolumeMixerPluginMain.Instance!, $"Microphone '{config.DeviceName}' is not available");
+                return;
+            }
+
+            audioService.SetDefaultCaptureDevice(config.DeviceId, config.AllRoles);
+        }
+        else
+        {
+            var current = audioService.GetDefaultCaptureDeviceInfo();
+            var availableDevices = audioService.GetActiveCaptureDevices().ToDictionary(d => d.Id);
+
+            string targetId;
+            if (current?.Id == config.DeviceId || current?.Id != config.DeviceId2)
+            {
+                targetId = config.DeviceId2;
+            }
+            else
+            {
+                targetId = config.DeviceId;
+            }
+
+            if (!string.IsNullOrEmpty(targetId) && availableDevices.ContainsKey(targetId))
+            {
+                audioService.SetDefaultCaptureDevice(targetId, config.AllRoles);
+            }
+            else
+            {
+                var name = current?.Id == config.DeviceId ? config.DeviceName2 : config.DeviceName;
+                MacroDeckLogger.Warning(VolumeMixerPluginMain.Instance!, $"Microphone '{name}' is not available for toggle");
+            }
+        }
+
         VolumeMixerPluginMain.Instance?.UpdateVariables();
     }
 
@@ -45,12 +87,18 @@ public class SetDefaultMicrophoneConfig
 {
     public string DeviceId { get; set; } = "";
     public string DeviceName { get; set; } = "";
+    public bool ToggleMode { get; set; } = false;
+    public string DeviceId2 { get; set; } = "";
+    public string DeviceName2 { get; set; } = "";
     public bool AllRoles { get; set; } = true;
 }
 
 public class SetDefaultMicrophoneConfigControl : ActionConfigControl
 {
     private readonly MacroDeckRoundedComboBox _deviceComboBox;
+    private readonly MacroDeckRoundedComboBox _device2ComboBox;
+    private readonly Label _device2Label;
+    private readonly CheckBox _toggleModeCheckBox;
     private readonly CheckBox _allRolesCheckBox;
     private readonly Button _refreshButton;
     private readonly SetDefaultMicrophoneAction _action;
@@ -69,24 +117,50 @@ public class SetDefaultMicrophoneConfigControl : ActionConfigControl
 
         _deviceComboBox = new MacroDeckRoundedComboBox
         {
-            Location = new Point(100, 14),
-            Width = 260,
+            Location = new Point(150, 14),
+            Width = 230,
             DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList
         };
 
         _refreshButton = new Button
         {
             Text = "↻",
-            Location = new Point(370, 12),
+            Location = new Point(390, 12),
             Width = 30,
             Height = 26
         };
         _refreshButton.Click += (_, _) => PopulateDevices();
 
+        _toggleModeCheckBox = new CheckBox
+        {
+            Text = "Toggle between 2 microphones",
+            Location = new Point(14, 50),
+            AutoSize = true,
+            Checked = false
+        };
+        _toggleModeCheckBox.CheckedChanged += (_, _) => UpdateUI();
+
+        _device2Label = new Label
+        {
+            Text = "Microphone 2:",
+            Location = new Point(14, 82),
+            AutoSize = true,
+            Visible = false
+        };
+
+        _device2ComboBox = new MacroDeckRoundedComboBox
+        {
+            Location = new Point(150, 78),
+            Width = 230,
+            DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList,
+            Visible = false
+        };
+        _device2ComboBox.SelectedIndexChanged += (_, _) => ValidateDeviceSelection();
+
         _allRolesCheckBox = new CheckBox
         {
             Text = "Set for all roles (Console, Multimedia, Communications)",
-            Location = new Point(100, 48),
+            Location = new Point(14, 116),
             AutoSize = true,
             Checked = true
         };
@@ -94,10 +168,42 @@ public class SetDefaultMicrophoneConfigControl : ActionConfigControl
         Controls.Add(label);
         Controls.Add(_deviceComboBox);
         Controls.Add(_refreshButton);
+        Controls.Add(_toggleModeCheckBox);
+        Controls.Add(_device2Label);
+        Controls.Add(_device2ComboBox);
         Controls.Add(_allRolesCheckBox);
 
         PopulateDevices();
         LoadConfig();
+    }
+
+    private void UpdateUI()
+    {
+        var isToggleMode = _toggleModeCheckBox.Checked;
+        _device2Label.Visible = isToggleMode;
+        _device2ComboBox.Visible = isToggleMode;
+
+        if (!isToggleMode)
+        {
+            _allRolesCheckBox.Location = new Point(14, 86);
+        }
+        else
+        {
+            _allRolesCheckBox.Location = new Point(14, 116);
+        }
+    }
+
+    private void ValidateDeviceSelection()
+    {
+        if (!_toggleModeCheckBox.Checked) return;
+
+        var device1 = _deviceComboBox.SelectedItem as DeviceItem;
+        var device2 = _device2ComboBox.SelectedItem as DeviceItem;
+
+        if (device1 != null && device2 != null && device1.Id == device2.Id)
+        {
+            _device2ComboBox.SelectedIndex = -1;
+        }
     }
 
     private void PopulateDevices()
@@ -105,23 +211,30 @@ public class SetDefaultMicrophoneConfigControl : ActionConfigControl
         _devices = VolumeMixerPluginMain.Instance?.AudioService?.GetActiveCaptureDevices().ToList()
                    ?? new List<(string, string)>();
 
-        var selectedId = _deviceComboBox.SelectedItem is DeviceItem sel ? sel.Id : null;
+        var selectedId1 = _deviceComboBox.SelectedItem is DeviceItem sel1 ? sel1.Id : null;
+        var selectedId2 = _device2ComboBox.SelectedItem is DeviceItem sel2 ? sel2.Id : null;
 
         _deviceComboBox.Items.Clear();
+        _device2ComboBox.Items.Clear();
         foreach (var (name, id) in _devices)
         {
             _deviceComboBox.Items.Add(new DeviceItem(name, id));
+            _device2ComboBox.Items.Add(new DeviceItem(name, id));
         }
 
-        if (!string.IsNullOrEmpty(selectedId))
+        RestoreSelection(_deviceComboBox, selectedId1);
+        RestoreSelection(_device2ComboBox, selectedId2);
+    }
+
+    private static void RestoreSelection(MacroDeckRoundedComboBox comboBox, string? selectedId)
+    {
+        if (string.IsNullOrEmpty(selectedId)) return;
+        for (int i = 0; i < comboBox.Items.Count; i++)
         {
-            for (int i = 0; i < _deviceComboBox.Items.Count; i++)
+            if (comboBox.Items[i] is DeviceItem item && item.Id == selectedId)
             {
-                if (_deviceComboBox.Items[i] is DeviceItem item && item.Id == selectedId)
-                {
-                    _deviceComboBox.SelectedIndex = i;
-                    break;
-                }
+                comboBox.SelectedIndex = i;
+                return;
             }
         }
     }
@@ -134,15 +247,11 @@ public class SetDefaultMicrophoneConfigControl : ActionConfigControl
             var config = JsonConvert.DeserializeObject<SetDefaultMicrophoneConfig>(_action.Configuration);
             if (config != null)
             {
+                _toggleModeCheckBox.Checked = config.ToggleMode;
                 _allRolesCheckBox.Checked = config.AllRoles;
-                for (int i = 0; i < _deviceComboBox.Items.Count; i++)
-                {
-                    if (_deviceComboBox.Items[i] is DeviceItem item && item.Id == config.DeviceId)
-                    {
-                        _deviceComboBox.SelectedIndex = i;
-                        break;
-                    }
-                }
+                RestoreSelection(_deviceComboBox, config.DeviceId);
+                RestoreSelection(_device2ComboBox, config.DeviceId2);
+                UpdateUI();
             }
         }
         catch
@@ -153,14 +262,38 @@ public class SetDefaultMicrophoneConfigControl : ActionConfigControl
     public override bool OnActionSave()
     {
         var selectedDevice = _deviceComboBox.SelectedItem as DeviceItem;
+        var selectedDevice2 = _device2ComboBox.SelectedItem as DeviceItem;
+
+        if (_toggleModeCheckBox.Checked && (selectedDevice == null || selectedDevice2 == null || selectedDevice.Id == selectedDevice2.Id))
+        {
+            return false;
+        }
+
+        if (!_toggleModeCheckBox.Checked && selectedDevice == null)
+        {
+            return false;
+        }
+
         var config = new SetDefaultMicrophoneConfig
         {
             DeviceId = selectedDevice?.Id ?? "",
             DeviceName = selectedDevice?.Name ?? "",
+            ToggleMode = _toggleModeCheckBox.Checked,
+            DeviceId2 = selectedDevice2?.Id ?? "",
+            DeviceName2 = selectedDevice2?.Name ?? "",
             AllRoles = _allRolesCheckBox.Checked
         };
         _action.Configuration = JsonConvert.SerializeObject(config);
-        _action.ConfigurationSummary = config.DeviceName;
+
+        if (config.ToggleMode)
+        {
+            _action.ConfigurationSummary = $"Toggle: {config.DeviceName} ↔ {config.DeviceName2}";
+        }
+        else
+        {
+            _action.ConfigurationSummary = config.DeviceName;
+        }
+
         return true;
     }
 

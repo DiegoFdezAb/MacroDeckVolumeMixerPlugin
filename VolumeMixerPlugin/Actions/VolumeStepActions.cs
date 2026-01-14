@@ -122,9 +122,9 @@ public class VolumeStepConfigControl : ActionConfigControl
         _action = action;
 
         var label = new Label { Text = "App Name:", Location = new Point(14, 18), AutoSize = true };
-        _appComboBox = new MacroDeckRoundedComboBox { Location = new Point(120, 14), Width = 200, DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList };
+        _appComboBox = new MacroDeckRoundedComboBox { Location = new Point(150, 14), Width = 200, DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList };
 
-        var refreshButton = new Button { Location = new Point(330, 12), Width = 30, Height = 26, Text = "↻" };
+        var refreshButton = new Button { Location = new Point(360, 12), Width = 30, Height = 26, Text = "↻" };
         refreshButton.Click += (sender, e) => PopulateApps();
 
         Controls.Add(label);
