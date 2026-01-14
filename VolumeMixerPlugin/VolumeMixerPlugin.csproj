@@ -9,7 +9,7 @@
     <AssemblyName>VolumeMixerPlugin</AssemblyName>
     <RootNamespace>VolumeMixerPlugin</RootNamespace>
     <Version>1.0.0</Version>
-    <Authors>Diego</Authors>
+    <Authors>DiegoFdezAb</Authors>
     <Description>Windows Volume Mixer plugin for Macro Deck - Control per-app volumes and audio devices</Description>
     <EnableDynamicLoading>true</EnableDynamicLoading>
   </PropertyGroup>

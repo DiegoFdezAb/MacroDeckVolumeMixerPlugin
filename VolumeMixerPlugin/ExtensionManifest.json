@@ -1,10 +1,12 @@
 {
   "type": "Plugin",
   "name": "Volume Mixer Plugin",
-  "author": "Diego",
-  "repository": "",
-  "packageId": "VolumeMixerPlugin",
+  "author": "DiegoFdezAb",
+  "repository": "https://github.com/DiegoFdezAb/MacroDeckVolumeMixerPlugin",
+  "packageId": "DiegoFdezAb.VolumeMixerPlugin",
   "version": "1.0.0",
-  "target-plugin-api-version": 50,
-  "dll": "VolumeMixerPlugin.dll"
+  "target-plugin-api-version": 40,
+  "target-macro-deck-version": "2.14.1",
+  "dll": "VolumeMixerPlugin.dll",
+  "author-discord-userid": "456034288949788692"
 }

@@ -25,7 +25,7 @@ A **Macro Deck 2** plugin that provides Windows audio control directly from your
 
 ## Requirements
 
-- **Macro Deck 2** (v2.9.0 or later recommended)
+- **[Macro Deck 2](https://macrodeck.org/)** (v2.9.0 or later recommended)
 - **Windows 10/11** (uses Windows Core Audio API)
 - **.NET 8.0 Runtime** (included with Macro Deck)
 
@@ -151,7 +151,7 @@ Toggle mode is available for:
 ## Technical Details
 
 ### Audio API
-This plugin uses **NAudio** with the Windows **Core Audio API** (WASAPI) to:
+This plugin uses **[NAudio](https://github.com/naudio/NAudio)** with the Windows **Core Audio API** (WASAPI) to:
 - Enumerate audio endpoints (`MMDeviceEnumerator`)
 - Access audio sessions per device (`AudioSessionManager`)
 - Control per-application volume (`SimpleAudioVolume`)
@@ -206,6 +206,6 @@ MIT License — See [LICENSE](LICENSE) for details.
 
 ## Credits
 
-- **NAudio** — Audio library for .NET
-- **Macro Deck** — The excellent macro pad software by SuchByte
+- **[NAudio](https://github.com/naudio/NAudio)** — Audio library for .NET
+- **[Macro Deck](https://macrodeck.org/)** — The excellent macro pad software by SuchByte
 - Inspired by the need for simple audio control without Voicemeeter overhead
