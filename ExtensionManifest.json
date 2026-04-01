@@ -1,6 +1,6 @@
 {
   "type": "Plugin",
-  "name": "Volume Mixer Plugin",
+  "name": "VolumeMixerPlugin",
   "author": "DiegoFdezAb",
   "repository": "https://github.com/DiegoFdezAb/MacroDeckVolumeMixerPlugin",
   "packageId": "DiegoFdezAb.VolumeMixerPlugin",
