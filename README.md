@@ -33,42 +33,13 @@ A **Macro Deck 2** plugin that provides Windows audio control directly from your
 
 ## Installation
 
-### From Extension Store (Recommended)
-> *Coming soon — once published to the Macro Deck Extension Store*
+### From Macro Deck Extension Store (Recommended)
 
-### Manual Installation
-
-1. **Download** the latest release `.zip` from the [Releases](../../releases) page
-2. **Extract** the folder contents
-3. **Copy** the extracted folder to:
-   ```
-   %appdata%\Macro Deck\plugins\
-   ```
-4. **Restart** Macro Deck
-5. The plugin should appear in **Settings > Extensions**
-
-### Build from Source
-
-#### Quick Build & Deploy (Recommended)
-
-A PowerShell script is provided for building and automatically deploying to Macro Deck:
-
-```powershell
-# Build Debug configuration and deploy to Macro Deck
-.\build-and-deploy.ps1
-
-# Build Release configuration and deploy
-.\build-and-deploy.ps1 -Release
-
-# Deploy existing build without rebuilding
-.\build-and-deploy.ps1 -SkipBuild
-```
-
-The script will:
-1. Build the project in the specified configuration
-2. Stop Macro Deck if it's running
-3. Copy required files to `%appdata%\Macro Deck\plugins\VolumeMixerPlugin\`
-4. Restart Macro Deck automatically
+1. Open Macro Deck on your PC.
+2. Go to `Extensions`.
+3. Open the `Online` (Extension Store) tab.
+4. Search for `VolumeMixerPlugin`.
+5. Click `Install`.
 
 #### Manual Build
 

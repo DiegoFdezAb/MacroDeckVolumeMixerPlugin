@@ -4,7 +4,7 @@
   "author": "DiegoFdezAb",
   "repository": "https://github.com/DiegoFdezAb/MacroDeckVolumeMixerPlugin",
   "packageId": "DiegoFdezAb.VolumeMixerPlugin",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "target-plugin-api-version": 40,
   "target-macro-deck-version": "2.14.1",
   "dll": "VolumeMixerPlugin.dll",

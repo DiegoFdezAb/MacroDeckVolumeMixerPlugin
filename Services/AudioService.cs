@@ -352,34 +352,45 @@ public sealed class AudioService : IDisposable
     {
         try
         {
-            using var device = _deviceEnumerator.GetDefaultAudioEndpoint(DataFlow.Render, Role.Multimedia);
-            var sessions = device.AudioSessionManager.Sessions;
-
-            for (int i = 0; i < sessions.Count; i++)
+            var devices = _deviceEnumerator.EnumerateAudioEndPoints(DataFlow.Render, DeviceState.Active);
+            foreach (var device in devices)
             {
                 try
                 {
-                    var session = sessions[i];
-                    var pid = (int)session.GetProcessID;
-                    if (pid == 0) continue;
-
-                    string? name = null;
-                    try
+                    var sessions = device.AudioSessionManager.Sessions;
+                    for (int i = 0; i < sessions.Count; i++)
                     {
-                        using var proc = Process.GetProcessById(pid);
-                        name = proc.ProcessName;
-                    }
-                    catch
-                    {
-                    }
+                        try
+                        {
+                            var session = sessions[i];
+                            var pid = (int)session.GetProcessID;
+                            if (pid == 0) continue;
 
-                    if (!string.Equals(name, processName, StringComparison.OrdinalIgnoreCase)) continue;
+                            string? name = null;
+                            try
+                            {
+                                using var proc = Process.GetProcessById(pid);
+                                name = proc.ProcessName;
+                            }
+                            catch
+                            {
+                            }
 
-                    mutate(session);
-                    return;
+                            if (!string.Equals(name, processName, StringComparison.OrdinalIgnoreCase)) continue;
+
+                            mutate(session);
+                        }
+                        catch
+                        {
+                        }
+                    }
                 }
                 catch
                 {
+                }
+                finally
+                {
+                    device.Dispose();
                 }
             }
         }
