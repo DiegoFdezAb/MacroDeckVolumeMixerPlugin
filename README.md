@@ -1,6 +1,6 @@
 # Volume Mixer Plugin for Macro Deck
 
-A **Macro Deck 2** plugin that provides Windows audio control directly from your macro pad. Monitor and control audio devices, per-application volumes, and default device selection — a lightweight alternative to Voicemeeter Banana for basic audio routing needs.
+A **Macro Deck 2** plugin that provides Windows audio control directly from your macro pad. Monitor and control audio devices, per-application volumes, and default device selection a lightweight alternative to Voicemeeter Banana for basic audio routing needs.
 
 ---
 
@@ -16,10 +16,6 @@ A **Macro Deck 2** plugin that provides Windows audio control directly from your
 - **Switch Output + Microphone**: Change both output and input devices together (audio profile switching)
 - **Device Switching**: Switch output and/or microphone devices via actions
 - **Toggle Mode**: Toggle between 2 devices with a single button press (output, microphone, or both)
-
-### Planned
-- **Volume Sliders**: Expose volume levels as Macro Deck variables for dynamic button labels
-- **Audio Session Monitoring**: Real-time updates when apps start/stop playing audio
 
 ---
 
